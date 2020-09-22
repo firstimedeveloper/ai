@@ -46,12 +46,13 @@ func main() {
 
 	people := make(People)
 	movie := make(Movies)
-	//names := make(Names)
+	names := make(Names)
 	for i, p := range peopleData {
 		if i == 0 {
 			continue
 		}
 		people[personID(p[0])] = &personInfo{name: p[1], birth: p[2]}
+		names[p[1]] = append(names[p[1]], personID(p[0]))
 	}
 
 	for i, p := range movieData {
@@ -79,6 +80,9 @@ func main() {
 	}
 	for _, v := range movie {
 		fmt.Println(v.title, v.year, v.stars)
+	}
+	for i, v := range names {
+		fmt.Println(i, v)
 	}
 }
 
