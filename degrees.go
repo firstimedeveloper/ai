@@ -1,13 +1,30 @@
 package main
 
 import (
+	"bufio"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"os"
 )
 
+func NewData() *Data {
+	return &Data{}
+}
+
+type Data struct {
+	Names  Names
+	People People
+	Movies Movies
+}
+
+// Names is a map with keys of actors' names that points to a slice of personIDs
 type Names map[string][]personID
+
+// People is a map with keys of personIDs pointing to a personInfo struct
 type People map[personID]*personInfo
+
+// Movies is a map with keys of movieIDs pointing to a movieInfo struct
 type Movies map[movieID]*movieInfo
 
 type personID string
@@ -16,6 +33,7 @@ type personInfo struct {
 	birth  string
 	movies []movieID
 }
+
 type movieID string
 type movieInfo struct {
 	title string
@@ -47,19 +65,24 @@ func main() {
 	people := make(People)
 	movies := make(Movies)
 	names := make(Names)
+	data := Data{
+		Names:  names,
+		People: people,
+		Movies: movies,
+	}
 	for i, p := range peopleData {
 		if i == 0 {
 			continue
 		}
-		people[personID(p[0])] = &personInfo{name: p[1], birth: p[2]}
-		names[p[1]] = append(names[p[1]], personID(p[0]))
+		data.People[personID(p[0])] = &personInfo{name: p[1], birth: p[2]}
+		data.Names[p[1]] = append(data.Names[p[1]], personID(p[0]))
 	}
 
 	for i, p := range movieData {
 		if i == 0 {
 			continue
 		}
-		movies[movieID(p[0])] = &movieInfo{title: p[1], year: p[2]}
+		data.Movies[movieID(p[0])] = &movieInfo{title: p[1], year: p[2]}
 	}
 
 	for i, p := range starsData {
@@ -67,23 +90,41 @@ func main() {
 		if i == 0 {
 			continue
 		}
-		if movies[movieID(p[1])] != nil {
-			movies[movieID(p[1])].stars = append(movies[movieID(p[1])].stars, personID(p[0]))
+		if data.Movies[movieID(p[1])] != nil {
+			data.Movies[movieID(p[1])].stars = append(data.Movies[movieID(p[1])].stars, personID(p[0]))
 		}
-		if people[personID(p[0])] != nil {
-			people[personID(p[0])].movies = append(people[personID(p[0])].movies, movieID(p[1]))
+		if data.People[personID(p[0])] != nil {
+			data.People[personID(p[0])].movies = append(data.People[personID(p[0])].movies, movieID(p[1]))
 		}
 	}
 
-	for _, v := range people {
-		fmt.Println(v.name, v.birth, v.movies)
+	// for _, v := range data.People {
+	// 	fmt.Println(v.name, v.birth, v.movies)
+	// }
+	// for _, v := range data.Movies {
+	// 	fmt.Println(v.title, v.year, v.stars)
+	// }
+	// for i, v := range data.Names {
+	// 	fmt.Println(i, v)
+	// }
+
+	fmt.Println("Done loading data.")
+	var actor1 string
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("Name of the first actor: ")
+	if scanner.Scan() {
+		actor1 = scanner.Text()
 	}
-	for _, v := range movies {
-		fmt.Println(v.title, v.year, v.stars)
+	// fmt.Print("Name of the second actor: ")
+	// if scanner.Scan() {
+	// 	actor2 = scanner.Text()
+	// }
+	id, err := data.personIDfromName(actor1)
+	if err != nil {
+		fmt.Println("Error encountered: ", err)
+		return
 	}
-	for i, v := range names {
-		fmt.Println(i, v)
-	}
+	fmt.Println(id)
 }
 
 func readFromFile(fileName string) ([][]string, error) {
@@ -100,4 +141,27 @@ func readFromFile(fileName string) ([][]string, error) {
 		return nil, err
 	}
 	return records, nil
+}
+
+func (d Data) personIDfromName(name string) (personID, error) {
+	var id personID
+	if d.Names[name] == nil {
+		return "", errors.New("Name not found: " + name)
+	} else if len(d.Names[name]) > 1 {
+		fmt.Printf("There are more than 1 actors named %s.\n", name)
+		for _, v := range d.Names[name] {
+			fmt.Printf("[%s] Birth Year: %s Movies: ", v, d.People[v].birth)
+			mID := d.People[v].movies
+			for _, m := range mID {
+				fmt.Printf("'%s' ", d.Movies[m].title)
+			}
+			fmt.Println("")
+			
+		}
+		fmt.Printf("Enter the id: ")
+		fmt.Scanf("%s\n", &id)
+	} else {
+		id = d.Names[name][0]
+	}
+	return id, nil
 }
