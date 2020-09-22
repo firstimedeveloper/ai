@@ -7,8 +7,8 @@ import (
 )
 
 type Names map[string][]personID
-type People map[personID]personInfo
-type Movies map[movieID]movieInfo
+type People map[personID]*personInfo
+type Movies map[movieID]*movieInfo
 
 type personID string
 type personInfo struct {
@@ -31,20 +31,55 @@ func main() {
 		fmt.Println("Loading the large complete dataset...")
 	}
 
-	records, err := readFromFile(arg + "/" + "people.csv")
+	peopleData, err := readFromFile(arg + "/" + "people.csv")
+	if err != nil {
+		panic(err)
+	}
+	movieData, err := readFromFile(arg + "/" + "movies.csv")
+	if err != nil {
+		panic(err)
+	}
+	starsData, err := readFromFile(arg + "/" + "stars.csv")
 	if err != nil {
 		panic(err)
 	}
 
 	people := make(People)
-	for i, p := range records {
+	movie := make(Movies)
+	//names := make(Names)
+	for i, p := range peopleData {
 		if i == 0 {
 			continue
 		}
-		people[personID(p[0])] = personInfo{name: p[1], birth: p[2]}
+		people[personID(p[0])] = &personInfo{name: p[1], birth: p[2]}
 	}
 
-	fmt.Println(people)
+	for i, p := range movieData {
+		if i == 0 {
+			continue
+		}
+		movie[movieID(p[0])] = &movieInfo{title: p[1], year: p[2]}
+	}
+
+	for i, p := range starsData {
+		// p = (personID, movieID)
+		if i == 0 {
+			continue
+		}
+		if movie[movieID(p[1])] != nil {
+			movie[movieID(p[1])].stars = append(movie[movieID(p[1])].stars, personID(p[0]))
+		}
+		if people[personID(p[0])] != nil {
+			people[personID(p[0])].movies = append(people[personID(p[0])].movies, movieID(p[1]))
+		}
+	}
+
+	for _, v := range people {
+		fmt.Println(v.name, v.birth, v.movies)
+	}
+	for _, v := range movie {
+		fmt.Println(v.title, v.year, v.stars)
+	}
 }
 
 func readFromFile(fileName string) ([][]string, error) {
