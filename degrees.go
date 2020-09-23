@@ -148,18 +148,22 @@ func (d Data) personIDfromName(name string) (personID, error) {
 	if d.Names[name] == nil {
 		return "", errors.New("Name not found: " + name)
 	} else if len(d.Names[name]) > 1 {
-		fmt.Printf("There are more than 1 actors named %s.\n", name)
-		for _, v := range d.Names[name] {
-			fmt.Printf("[%s] Birth Year: %s Movies: ", v, d.People[v].birth)
+		fmt.Printf("There are %d actors named %s.\n", len(d.Names[name]), name)
+		for i, v := range d.Names[name] {
+			fmt.Printf("%d) ID: %s Birth Year: %s Movies: ", i+1, v, d.People[v].birth)
 			mID := d.People[v].movies
 			for _, m := range mID {
 				fmt.Printf("'%s' ", d.Movies[m].title)
 			}
 			fmt.Println("")
-			
+
 		}
-		fmt.Printf("Enter the id: ")
-		fmt.Scanf("%s\n", &id)
+		count := 0
+		for count > len(d.Names[name]) || count <= 0 {
+			fmt.Printf("Enter the number: ")
+			fmt.Scanf("%d\n", &count)
+		}
+		id = d.Names[name][count-1]
 	} else {
 		id = d.Names[name][0]
 	}
