@@ -132,6 +132,10 @@ func main() {
 	}
 
 	paths, err := data.shortestPath(source, target)
+	if err != nil {
+		fmt.Println("Error getting shortest path")
+		return
+	}
 
 	fmt.Printf("%d Degree of Separation\n", len(paths))
 	len := len(paths)
