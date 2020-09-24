@@ -133,9 +133,24 @@ func main() {
 
 	paths, err := data.shortestPath(source, target)
 
-	for _, p := range paths {
-		fmt.Println(p.pID, p.mID)
+	fmt.Printf("%d Degree of Separation\n", len(paths))
+	len := len(paths)
+	paths = append(paths, pair{mID: "", pID: source})
+
+	for i, j := 0, len; i < j; i, j = i+1, j-1 {
+		paths[i], paths[j] = paths[j], paths[i]
 	}
+	if len == 0 {
+		fmt.Printf("The two actors don't seem to be connected\n")
+	} else {
+		for i := 0; i < len; i++ {
+			person1 := data.People[paths[i].pID].name
+			person2 := data.People[paths[i+1].pID].name
+			movie := data.Movies[paths[i+1].mID].title
+			fmt.Printf("%d. %s and %s starred in %s\n", i+1, person1, person2, movie)
+		}
+	}
+
 }
 
 func (d Data) neighborsForPerson(id personID) []pair {
@@ -162,19 +177,58 @@ func (d Data) shortestPath(source, target personID) ([]pair, error) {
 			pID: source,
 			mID: currentMovieID,
 		},
-		Parent: pair{},
-		Action: pair{},
+		Parent: nil,
 	}
 	frontier := Frontier{}
 	frontier.Add(start)
+	var explored []pair
 
-	peek, err := frontier.Peek()
-	if err != nil {
-		return nil, err
+	for true {
+		if err := frontier.Empty(); err != nil {
+			return nil, err
+		}
+
+		node, _ := frontier.Peek()
+		frontier.Remove()
+		explored = append(explored, node.State)
+
+		if node.State.pID == target {
+			var cells []pair
+			for node.Parent != nil {
+				cells = append(cells, node.State)
+				node = *node.Parent
+			}
+			return cells, nil
+		}
+
+		pairs := d.neighborsForPerson(node.State.pID)
+		for _, p := range pairs {
+			if p.pID == target {
+				var cells []pair
+				cells = append(cells, p)
+				for node.Parent != nil {
+					cells = append(cells, node.State)
+					node = *node.Parent
+				}
+				return cells, nil
+			}
+			inExplored := false
+			for _, v := range explored {
+				if v == p {
+					inExplored = true
+				}
+			}
+			if !frontier.Contains(p) && !inExplored {
+				child := Node{
+					State:  p,
+					Parent: &node,
+				}
+				frontier.Add(child)
+			}
+		}
 	}
-	var result []pair
-	result = append(result, pair(peek))
-	return result, nil
+
+	return nil, nil
 }
 
 func readFromFile(fileName string) ([][]string, error) {
@@ -200,7 +254,7 @@ func (d Data) personIDfromName(name string) (personID, error) {
 	} else if len(d.Names[name]) > 1 {
 		fmt.Printf("There are %d actors named %s.\n", len(d.Names[name]), name)
 		for i, v := range d.Names[name] {
-			fmt.Printf("%d) ID: %s Birth Year: %s Movies: ", i+1, v, d.People[v].birth)
+			fmt.Printf("%d. ID: %s Birth Year: %s Movies: ", i+1, v, d.People[v].birth)
 			mID := d.People[v].movies
 			for _, m := range mID {
 				fmt.Printf("'%s' ", d.Movies[m].title)

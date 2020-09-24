@@ -9,8 +9,7 @@ type pair struct {
 
 type Node struct {
 	State  pair
-	Parent pair
-	Action pair
+	Parent *Node
 }
 
 // Frontier Queue
@@ -38,11 +37,11 @@ func (f *Frontier) Empty() error {
 	return nil
 }
 
-func (f *Frontier) Peek() (pair, error) {
+func (f *Frontier) Peek() (Node, error) {
 	if f.Empty() != nil {
-		return pair{}, f.Empty()
+		return (Node{}), f.Empty()
 	}
-	return f.frontier[0].State, nil
+	return f.frontier[0], nil
 }
 
 func (f *Frontier) Remove() error {
