@@ -109,22 +109,72 @@ func main() {
 	// }
 
 	fmt.Println("Done loading data.")
-	var actor1 string
+	// actor 1,2
+	var actor1, actor2 string
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Name of the first actor: ")
 	if scanner.Scan() {
 		actor1 = scanner.Text()
 	}
-	// fmt.Print("Name of the second actor: ")
-	// if scanner.Scan() {
-	// 	actor2 = scanner.Text()
-	// }
-	id, err := data.personIDfromName(actor1)
+	source, err := data.personIDfromName(actor1)
 	if err != nil {
 		fmt.Println("Error encountered: ", err)
 		return
 	}
-	fmt.Println(id)
+	fmt.Print("Name of the second actor: ")
+	if scanner.Scan() {
+		actor2 = scanner.Text()
+	}
+	target, err := data.personIDfromName(actor2)
+	if err != nil {
+		fmt.Println("Error encountered: ", err)
+		return
+	}
+
+	paths, err := data.shortestPath(source, target)
+
+	for _, p := range paths {
+		fmt.Println(p.pID, p.mID)
+	}
+}
+
+func (d Data) neighborsForPerson(id personID) []pair {
+	movies := d.People[id].movies
+	var neighbors []pair
+	for _, m := range movies {
+		for _, p := range d.Movies[m].stars {
+			pair := pair{
+				pID: p,
+				mID: m,
+			}
+			neighbors = append(neighbors, pair)
+		}
+	}
+	return neighbors
+}
+
+func (d Data) shortestPath(source, target personID) ([]pair, error) {
+	// State = [personID, movieID]
+	// just using the mID of the first index in the slice of pairs.
+	currentMovieID := d.neighborsForPerson(source)[0].mID
+	start := Node{
+		State: pair{
+			pID: source,
+			mID: currentMovieID,
+		},
+		Parent: pair{},
+		Action: pair{},
+	}
+	frontier := Frontier{}
+	frontier.Add(start)
+
+	peek, err := frontier.Peek()
+	if err != nil {
+		return nil, err
+	}
+	var result []pair
+	result = append(result, pair(peek))
+	return result, nil
 }
 
 func readFromFile(fileName string) ([][]string, error) {
