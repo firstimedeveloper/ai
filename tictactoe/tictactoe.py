@@ -113,18 +113,41 @@ def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    a = actions(board)
-    start = util.Node(state=a.pop(), parent=0, action=0)
-    frontier = util.QueueFrontier()
-    frontier.add(start)
+    coord = tuple
 
-    while True:
+    def max(board):
+        if terminal(board):
+            return utility(board)
+        v = -2
+        nonlocal coord
+        for action in actions(board):
+            a = min(result(board, action))
+            if v < a:
+                v = a
+                coord = action
+        return v
+
+    def min(board): 
+        if terminal(board):
+            return utility(board)
+        v = 2 
+        nonlocal coord
+        for action in actions(board):
+            a = max(result(board, action))
+            if v > a:
+                v = a
+                coord = action
+        return v
+
+    p = player(board)
+    if p == X: 
+        max(board)
+    elif p == O:
+        min(board)
+    return coord
+
+
+
 
         
-        for action in actions(board):
-            return action
-
-
-        if terminal(board):
-            return None
         
