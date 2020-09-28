@@ -113,46 +113,43 @@ def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-
-    def max(board):
-        if terminal(board):
-            return utility(board)
-        v = -2
-        for action in actions(board):
-            a = min(result(board, action))
-            # if a == 1:
-            #     return a
-            if v < a:
-                v = a
-        return v
-
-    def min(board): 
-        if terminal(board):
-            return utility(board)
-        v = 2 
-        for action in actions(board):
-            a = max(result(board, action))
-            # if a == -1:
-            #     return a
-            if v > a:
-                v = a
-        return v
-
-    coord = tuple
     p = player(board)
-    if p == X: 
-        v = -2
-        for action in actions(board):
-            a = max(result(board, action))
-            if v < a:
-                coord = action
-    elif p == O:
-        v = 2
-        for action in actions(board):
-            a = min(result(board, action))
-            if v > a:
-                coord = action
+    coord = None
+    if p == O:
+        _,coord = maxmin(board, False)
+    else:
+        _,coord = maxmin(board, True)
+        
+
     return coord
+
+def maxmin(board, maxPlayer):
+    if terminal(board):
+        return utility(board), None
+    coord = None
+    value = 0
+    if maxPlayer:
+        value = -10
+        for action in actions(board):
+            a,_ = maxmin(result(board, action), False)
+            # value = max(a, value)
+            if value < a:
+                value = a
+                coord = action
+                if a == 1:
+                    return value, coord
+    else:
+        value = 10
+        for action in actions(board):
+            a,_ = maxmin(result(board, action), True)
+            # value = min(a, value)
+            if value > a:
+                value = a
+                coord = action
+                if a == -1:
+                    return value, coord
+    return value, coord
+
 
 
 
