@@ -113,37 +113,45 @@ def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    coord = tuple
 
     def max(board):
         if terminal(board):
             return utility(board)
         v = -2
-        nonlocal coord
         for action in actions(board):
             a = min(result(board, action))
+            # if a == 1:
+            #     return a
             if v < a:
                 v = a
-                coord = action
         return v
 
     def min(board): 
         if terminal(board):
             return utility(board)
         v = 2 
-        nonlocal coord
         for action in actions(board):
             a = max(result(board, action))
+            # if a == -1:
+            #     return a
             if v > a:
                 v = a
-                coord = action
         return v
 
+    coord = tuple
     p = player(board)
     if p == X: 
-        max(board)
+        v = -2
+        for action in actions(board):
+            a = max(result(board, action))
+            if v < a:
+                coord = action
     elif p == O:
-        min(board)
+        v = 2
+        for action in actions(board):
+            a = min(result(board, action))
+            if v > a:
+                coord = action
     return coord
 
 
