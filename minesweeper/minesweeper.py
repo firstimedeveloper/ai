@@ -194,7 +194,7 @@ class MinesweeperAI():
         cells = set()
         for i in range(cell[0]-1, cell[0]+2):
             for j in range(cell[1]-1, cell[1]+2):
-                if i < 0 or i > 7 or i < 0 or i > 7:
+                if i < 0 or i > 7 or j < 0 or j > 7:
                     continue
                 if cell == (i,j):
                     continue
@@ -213,15 +213,23 @@ class MinesweeperAI():
             print(sentence)
         print(f'mines: {self.mines}\nsafes: {self.safes}')
         if len(self.knowledge) != 0:
-            for sentence in self.knowledge:
-                if (sentence.known_mines() == None) and (sentence.known_mines() == None):
-                    continue
-                for cell in sentence.known_mines().copy():
-                    if cell not in self.mines:
-                        self.mark_mine(cell)
-                for cell in sentence.known_safes().copy():
-                    if cell not in self.safes:
-                        self.mark_safe(cell)   
+            for sentence in self.knowledge.copy():
+                mines = sentence.known_mines()
+                if mines != None:
+                    for cell in mines.copy():
+                        if cell not in self.mines:
+                            self.mark_mine(cell)
+                safes = sentence.known_safes()
+                if safes != None:
+                    for cell in safes.copy():
+                        if cell not in self.safes:
+                            self.mark_safe(cell)
+                for s in self.knowledge.copy():
+                    rem = sentence.cells-s.cells
+                    if sentence.cells.issubset(s.cells) and len(rem) > 0:
+                        self.knowledge.append(Sentence(rem, sentence.count-s.count))
+
+        
         
 
                 
@@ -237,11 +245,8 @@ class MinesweeperAI():
         and self.moves_made, but should not modify any of those values.
         """
         for i in self.safes:
-            if i in self.moves_made:
-                continue
-            if i in self.mines:
-                continue
-            return i 
+            if (i not in self.moves_made) and (i not in self.mines):
+                return i 
         return None
 
 
@@ -254,10 +259,10 @@ class MinesweeperAI():
         """
         randX = 0
         randY = 0
-        while ((randX, randY) not in self.moves_made) and ((randX, randY) not in self.mines):
+        while ((randX, randY) not in self.safes) and (randX, randY) not in self.moves_made) and ((randX, randY) not in self.mines):
             randX = random.randint(0,7)
             randY = random.randint(0,7)
 
-            return randX, randY
+        return randX, randY
 
 
