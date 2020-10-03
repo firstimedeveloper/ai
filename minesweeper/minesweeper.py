@@ -147,6 +147,7 @@ class MinesweeperAI():
 
         # Keep track of which cells have been clicked on
         self.moves_made = set()
+        self.moves_left = set(tuple((i, j) for i in range(0,8) for j in range(0,8)))
 
         # Keep track of cells known to be safe or mines
         self.mines = set()
@@ -188,8 +189,10 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
+        print("adding knowledge\n")
         self.moves_made.add(cell)
         self.mark_safe(cell)
+        self.moves_left.remove(cell)
 
         cells = set()
         for i in range(cell[0]-1, cell[0]+2):
@@ -218,27 +221,20 @@ class MinesweeperAI():
             for sentence in self.knowledge.copy():
                 mines = sentence.known_mines()
                 if mines != None:
-                    print("step1\n")
                     for cell in mines.copy():
                         if cell not in self.mines:
                             self.mark_mine(cell)
                 safes = sentence.known_safes()
                 if safes != None:
-                    print("step2\n")
                     for cell in safes.copy():
                         if cell not in self.safes:
                             self.mark_safe(cell)
                 for s in self.knowledge.copy():
-                    print("step3\n")
-                    rem = sentence.cells-s.cells
-                    if sentence.cells.issubset(s.cells) and len(rem) > 0:
-                        self.knowledge.append(Sentence(rem, sentence.count-s.count))
-
-        
-        
-
-                
-
+                    if s != sentence:
+                        rem = sentence.cells-s.cells
+                        cnt = sentence.count-s.count
+                        if sentence.cells.issubset(s.cells) and len(rem) > 0 and cnt > 0:
+                            self.knowledge.append(Sentence(rem, cnt))
 
     def make_safe_move(self):
         """
@@ -262,13 +258,17 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        randX = 0
-        randY = 0
-        while True:
-            randX = random.randint(0,7)
-            randY = random.randint(0,7)
-            if ((randX, randY) not in self.safes) and ((randX, randY) not in self.moves_made) and ((randX, randY) not in self.mines):
-                return randX, randY
-        return randX, randY
+        # randX = 0
+        # randY = 0
+        # while True:
+        #     randX = random.randint(0,7)
+        #     randY = random.randint(0,7)
+        #     if ((randX, randY) not in self.safes) and ((randX, randY) not in self.moves_made) and ((randX, randY) not in self.mines):
+        #         return randX, randY
+        # return randX, randY
+        avail = self.moves_left - self.mines
+
+        return next(iter(avail), None)
+
 
 
