@@ -209,22 +209,27 @@ class MinesweeperAI():
                 self.mark_safe(c)
         sentence = Sentence(cells, count)
         self.knowledge.append(sentence)
-        for sentence in self.knowledge:
+        for sentence in self.knowledge.copy():
+            if len(sentence.cells) == 0:
+                self.knowledge.remove(sentence)
             print(sentence)
         print(f'mines: {self.mines}\nsafes: {self.safes}')
         if len(self.knowledge) != 0:
             for sentence in self.knowledge.copy():
                 mines = sentence.known_mines()
                 if mines != None:
+                    print("step1\n")
                     for cell in mines.copy():
                         if cell not in self.mines:
                             self.mark_mine(cell)
                 safes = sentence.known_safes()
                 if safes != None:
+                    print("step2\n")
                     for cell in safes.copy():
                         if cell not in self.safes:
                             self.mark_safe(cell)
                 for s in self.knowledge.copy():
+                    print("step3\n")
                     rem = sentence.cells-s.cells
                     if sentence.cells.issubset(s.cells) and len(rem) > 0:
                         self.knowledge.append(Sentence(rem, sentence.count-s.count))
@@ -259,10 +264,11 @@ class MinesweeperAI():
         """
         randX = 0
         randY = 0
-        while ((randX, randY) not in self.safes) and (randX, randY) not in self.moves_made) and ((randX, randY) not in self.mines):
+        while True:
             randX = random.randint(0,7)
             randY = random.randint(0,7)
-
+            if ((randX, randY) not in self.safes) and ((randX, randY) not in self.moves_made) and ((randX, randY) not in self.mines):
+                return randX, randY
         return randX, randY
 
 
